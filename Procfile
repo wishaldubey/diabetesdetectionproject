@@ -1,1 +1,1 @@
-web: gunicorn DetectionPredictionApp.app:app
+web: gunicorn DiabetesApp.app:app
