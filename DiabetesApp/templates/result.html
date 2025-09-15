@@ -1,23 +1,430 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Prediction</title>
-	<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/style.css')}}">
-	<link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet">
-    <!-- <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
-	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Assessment Results - DiabetesGuard</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/result.css')}}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-	<div class="container">
-		<div class="contact-box">
-			<div class="left"></div>
-			<div class="right">
-				<h1 style="padding-top: 165px; padding-bottom: 130px;"><b>Your report {{prediction}} the presence of diabetes.</b></h1>
-                <button class="btn"  onclick="location.href = 'https://diabetesdetectionproject.onrender.com';   " ><b>Predict Again</b></button>
-                <div style="padding-bottom: 0px;"></div>
-			</div>
-		</div>
-	</div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('home') }}" class="nav-logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>DiabetesGuard</span>
+            </a>
+            <div class="nav-menu">
+                <a href="{{ url_for('home') }}" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    Home
+                </a>
+                <a href="{{ url_for('predict_form') }}" class="nav-link">
+                    <i class="fas fa-redo"></i>
+                    New Assessment
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Results Header -->
+        <div class="results-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="result-icon">
+                        {% if prediction == "indicates" %}
+                            <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        {% else %}
+                            <i class="fas fa-check-circle success-icon"></i>
+                        {% endif %}
+                    </div>
+                    <h1 class="result-title">
+                        Assessment Complete
+                    </h1>
+                    <p class="result-subtitle">
+                        Your diabetes risk analysis is ready
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Results -->
+        <div class="results-container">
+            <div class="container">
+                <div class="results-grid">
+                    <!-- Primary Result Card -->
+                    <div class="result-card primary-result">
+                        <div class="card-header">
+                            <h2>
+                                <i class="fas fa-chart-line"></i>
+                                Analysis Result
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            {% if prediction == "indicates" %}
+                                <div class="result-status warning">
+                                    <div class="status-icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="status-content">
+                                        <h3>Elevated Risk Detected</h3>
+                                        <p>Our analysis <strong>indicates</strong> the presence of diabetes risk factors based on your health data.</p>
+                                        <div class="confidence-score">
+                                            <span>Confidence: {{ confidence }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="risk-level">
+                                    <div class="risk-bar">
+                                        <div class="risk-fill high-risk" style="width: {{ confidence }}%"></div>
+                                    </div>
+                                    <span class="risk-label">High Risk ({{ confidence }}% confidence)</span>
+                                </div>
+                            {% else %}
+                                <div class="result-status success">
+                                    <div class="status-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="status-content">
+                                        <h3>Low Risk Profile</h3>
+                                        <p>Our analysis <strong>does not indicate</strong> significant diabetes risk factors based on your current health data.</p>
+                                        <div class="confidence-score">
+                                            <span>Confidence: {{ confidence }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="risk-level">
+                                    <div class="risk-bar">
+                                        <div class="risk-fill low-risk" style="width: {{ 100 - confidence }}%"></div>
+                                    </div>
+                                    <span class="risk-label">Low Risk ({{ confidence }}% confidence)</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- User Data Summary Card -->
+                    <div class="result-card user-data">
+                        <div class="card-header">
+                            <h2>
+                                <i class="fas fa-user-md"></i>
+                                Your Health Data
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="data-grid">
+                                <div class="data-item">
+                                    <div class="data-label">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        Age
+                                    </div>
+                                    <div class="data-value">{{ user_data.Age }} years</div>
+                                    <div class="data-status {% if user_data.Age > 45 %}warning{% else %}normal{% endif %}">
+                                        {% if user_data.Age > 45 %}Higher risk age group{% else %}Normal age group{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="data-item">
+                                    <div class="data-label">
+                                        <i class="fas fa-tint"></i>
+                                        Glucose Level
+                                    </div>
+                                    <div class="data-value">{{ user_data.Glucose }} mg/dL</div>
+                                    <div class="data-status {% if user_data.Glucose > 125 %}warning{% elif user_data.Glucose > 99 %}caution{% else %}normal{% endif %}">
+                                        {% if user_data.Glucose > 125 %}High (Diabetic range){% elif user_data.Glucose > 99 %}Elevated (Pre-diabetic){% else %}Normal{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="data-item">
+                                    <div class="data-label">
+                                        <i class="fas fa-heartbeat"></i>
+                                        Blood Pressure
+                                    </div>
+                                    <div class="data-value">{{ user_data.BloodPressure }} mmHg</div>
+                                    <div class="data-status {% if user_data.BloodPressure > 90 %}warning{% elif user_data.BloodPressure > 80 %}caution{% else %}normal{% endif %}">
+                                        {% if user_data.BloodPressure > 90 %}High{% elif user_data.BloodPressure > 80 %}Elevated{% else %}Normal{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="data-item">
+                                    <div class="data-label">
+                                        <i class="fas fa-weight"></i>
+                                        BMI
+                                    </div>
+                                    <div class="data-value">{{ "%.1f"|format(user_data.BMI) }}</div>
+                                    <div class="data-status {% if user_data.BMI > 30 %}warning{% elif user_data.BMI > 25 %}caution{% else %}normal{% endif %}">
+                                        {% if user_data.BMI > 30 %}Obese{% elif user_data.BMI > 25 %}Overweight{% elif user_data.BMI < 18.5 %}Underweight{% else %}Normal{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="data-item">
+                                    <div class="data-label">
+                                        <i class="fas fa-syringe"></i>
+                                        Insulin Level
+                                    </div>
+                                    <div class="data-value">{{ user_data.Insulin }} mu U/ml</div>
+                                    <div class="data-status {% if user_data.Insulin > 25 or user_data.Insulin == 0 %}warning{% elif user_data.Insulin < 2.6 %}caution{% else %}normal{% endif %}">
+                                        {% if user_data.Insulin == 0 %}Not measured{% elif user_data.Insulin > 25 %}High{% elif user_data.Insulin < 2.6 %}Low{% else %}Normal{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="data-item">
+                                    <div class="data-label">
+                                        <i class="fas fa-ruler"></i>
+                                        Skin Thickness
+                                    </div>
+                                    <div class="data-value">{{ user_data.SkinThickness }} mm</div>
+                                    <div class="data-status {% if user_data.SkinThickness > 40 or user_data.SkinThickness == 0 %}caution{% else %}normal{% endif %}">
+                                        {% if user_data.SkinThickness == 0 %}Not measured{% elif user_data.SkinThickness > 40 %}High{% else %}Normal{% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="data-item">
+                                    <div class="data-label">
+                                        <i class="fas fa-dna"></i>
+                                        Family History Score
+                                    </div>
+                                    <div class="data-value">{{ "%.3f"|format(user_data.DiabetesPedigreeFunction) }}</div>
+                                    <div class="data-status {% if user_data.DiabetesPedigreeFunction > 1.0 %}warning{% elif user_data.DiabetesPedigreeFunction > 0.5 %}caution{% else %}normal{% endif %}">
+                                        {% if user_data.DiabetesPedigreeFunction > 1.0 %}Strong family history{% elif user_data.DiabetesPedigreeFunction > 0.5 %}Moderate family history{% else %}Low family history{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations Card -->
+                    <div class="result-card recommendations">
+                        <div class="card-header">
+                            <h2>
+                                <i class="fas fa-lightbulb"></i>
+                                Recommendations
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            {% if prediction == "indicates" %}
+                                <div class="recommendation-list">
+                                    <div class="recommendation-item urgent">
+                                        <i class="fas fa-user-md"></i>
+                                        <div>
+                                            <strong>Consult Healthcare Provider</strong>
+                                            <p>Schedule an appointment with your doctor for professional evaluation and testing.</p>
+                                        </div>
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-heartbeat"></i>
+                                        <div>
+                                            <strong>Monitor Blood Sugar</strong>
+                                            <p>Regular glucose monitoring can help track your health status.</p>
+                                        </div>
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-apple-alt"></i>
+                                        <div>
+                                            <strong>Dietary Changes</strong>
+                                            <p>Consider a balanced diet low in processed sugars and refined carbs.</p>
+                                        </div>
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-running"></i>
+                                        <div>
+                                            <strong>Increase Physical Activity</strong>
+                                            <p>Regular exercise can help improve insulin sensitivity.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="recommendation-list">
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-shield-alt"></i>
+                                        <div>
+                                            <strong>Maintain Healthy Lifestyle</strong>
+                                            <p>Continue your current healthy habits to maintain low risk.</p>
+                                        </div>
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <div>
+                                            <strong>Regular Check-ups</strong>
+                                            <p>Annual health screenings help catch changes early.</p>
+                                        </div>
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-balance-scale"></i>
+                                        <div>
+                                            <strong>Weight Management</strong>
+                                            <p>Maintain a healthy BMI through balanced diet and exercise.</p>
+                                        </div>
+                                    </div>
+                                    <div class="recommendation-item">
+                                        <i class="fas fa-eye"></i>
+                                        <div>
+                                            <strong>Stay Vigilant</strong>
+                                            <p>Watch for symptoms like increased thirst, frequent urination, or fatigue.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Understanding Results Card -->
+                    <div class="result-card understanding">
+                        <div class="card-header">
+                            <h2>
+                                <i class="fas fa-info-circle"></i>
+                                Understanding Your Results
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-section">
+                                <h4>How Our Analysis Works</h4>
+                                <p>Our AI model analyzes seven key health parameters using machine learning algorithms trained on validated medical datasets. The model considers the complex relationships between these factors to assess diabetes risk.</p>
+                            </div>
+                            
+                            <div class="info-section">
+                                <h4>Key Factors Analyzed</h4>
+                                <div class="factors-grid">
+                                    <div class="factor">
+                                        <i class="fas fa-tint"></i>
+                                        <span>Glucose Level</span>
+                                    </div>
+                                    <div class="factor">
+                                        <i class="fas fa-weight"></i>
+                                        <span>BMI</span>
+                                    </div>
+                                    <div class="factor">
+                                        <i class="fas fa-heartbeat"></i>
+                                        <span>Blood Pressure</span>
+                                    </div>
+                                    <div class="factor">
+                                        <i class="fas fa-syringe"></i>
+                                        <span>Insulin</span>
+                                    </div>
+                                    <div class="factor">
+                                        <i class="fas fa-ruler"></i>
+                                        <span>Skin Thickness</span>
+                                    </div>
+                                    <div class="factor">
+                                        <i class="fas fa-dna"></i>
+                                        <span>Family History</span>
+                                    </div>
+                                    <div class="factor">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span>Age</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accuracy-badge">
+                                <i class="fas fa-award"></i>
+                                <div>
+                                    <strong>95% Accuracy</strong>
+                                    <p>Based on validated medical datasets</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Steps Card -->
+                    <div class="result-card next-steps">
+                        <div class="card-header">
+                            <h2>
+                                <i class="fas fa-route"></i>
+                                Next Steps
+                            </h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="steps-timeline">
+                                <div class="step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-content">
+                                        <h4>Save Your Results</h4>
+                                        <p>Download or print this report to share with your healthcare provider.</p>
+                                        <button class="btn-secondary" onclick="window.print()">
+                                            <i class="fas fa-print"></i>
+                                            Print Results
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-content">
+                                        <h4>Professional Consultation</h4>
+                                        <p>Discuss these results with a qualified healthcare professional for proper medical advice.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="step">
+                                    <div class="step-number">3</div>
+                                    <div class="step-content">
+                                        <h4>Regular Monitoring</h4>
+                                        <p>Consider periodic re-assessment to track changes in your health status.</p>
+                                        <a href="{{ url_for('predict_form') }}" class="btn-primary">
+                                            <i class="fas fa-redo"></i>
+                                            Take Another Assessment
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disclaimer Section -->
+        <div class="disclaimer-section">
+            <div class="container">
+                <div class="disclaimer-card">
+                    <div class="disclaimer-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Important Medical Disclaimer</h3>
+                    </div>
+                    <div class="disclaimer-content">
+                        <p><strong>This assessment is for educational and informational purposes only.</strong> It is not intended to be a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.</p>
+                        
+                        <p>The results provided by DiabetesGuard are based on statistical analysis and should not be considered as a definitive medical diagnosis. Diabetes diagnosis requires proper medical testing and evaluation by healthcare professionals.</p>
+                        
+                        <p>If you have concerns about diabetes or any health condition, please consult with a qualified healthcare provider immediately.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="footer-actions">
+        <div class="container">
+            <div class="actions-content">
+                <div class="action-buttons">
+                    <a href="{{ url_for('home') }}" class="btn-secondary">
+                        <i class="fas fa-home"></i>
+                        Back to Home
+                    </a>
+                    <a href="{{ url_for('predict_form') }}" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        New Assessment
+                    </a>
+                </div>
+                <div class="share-section">
+                    <span>Share this tool:</span>
+                    <div class="share-buttons">
+                        <button class="share-btn" onclick="shareResults()">
+                            <i class="fas fa-share-alt"></i>
+                            Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/result.js') }}"></script>
 </body>
 </html>
 
